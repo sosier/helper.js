@@ -1,15 +1,28 @@
+// ----------------------------------------------------------------------------
 // helper.js
-// ------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
-// Shared Helper Functions (across background, content, and popup):
-// Functions that could apply to any JS program (NOT __NEWNAME__ specific)
+// To-Do's:
+//  - Group functions into logical groups
+//  - Clean up and document all fuctions
 
+// Console Functions
 var log = function(text) {
+  /*
+  Logs message to the console
+  Looks for a global show_logs (boolean) constant before printing
+  Saves the time writing "console."
+
+  IN:
+    text = String to log to javascript console
+  */
+
   if (show_logs) {
     console.log(text);
   }
 };
 
+// Chrome Extension Messaging Functions
 var send_message = function(to, message) {
   if (to == "background") {
     message.to = to;
@@ -35,6 +48,7 @@ var get = function(what, _from="background") {
   send_message(_from, {"message": "GET", "what": what});
 };
 
+// String Functions
 var to_title_case = function(str) {
   /*
   IN:
@@ -50,10 +64,12 @@ var to_title_case = function(str) {
   return str.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
 }
 
+// HTML Functions
 var generate_link = function(url, text) {
   return "<a href=\"" + url + "\">" + text + "</a>";
 };
 
+// URL Functions
 var remove_url_protocol = function(url) {
   var url_without_protocol = remove_left(url, url.indexOf("//") + 2);
 
@@ -100,14 +116,7 @@ var extract_top_level_domain = function(string, from="url") {
   }
 };
 
-var set_background_color_to_parents = function(jquery_object) {
-  var parent = jquery_object.parent();
-  while (parent && parent.css("background-color") == "rgba(0, 0, 0, 0)") {
-    parent = parent.parent();
-  }
-  jquery_object.css("background-color", parent.css("background-color"));
-};
-
+// JQuery Functions
 var get_jquery_selector = function(jquery_object) {
   var path = [];
 
@@ -161,10 +170,9 @@ var deep_unbind = function(jquery_object) {
   });
 };
 
-var deep_copy = function(originalObject) {
-  return jQuery.extend(true, {}, originalObject);
+var deep_copy = function(original_object) {
+  return jQuery.extend(true, {}, original_object);
 };
-
 
 // Python-ification / My custom JS functions
 var len = function(item) {
@@ -198,7 +206,7 @@ var str = function(item, insert) {
   return item;
 };
 
-String.prototype.contains = function(it) { return this.indexOf(it) != -1; };
+String.prototype.contains = function(sub_string) { return this.indexOf(sub_string) != -1; };
 
 var starts_with = function(string, substring) {
   return string.indexOf(substring) == 0;
