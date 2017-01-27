@@ -11,13 +11,14 @@ var log = function(text) {
   /*
   Logs message to the console
   Looks for a global show_logs (boolean) constant before printing
+    - If show_logs not declared will log text
   Saves the time writing "console."
 
   IN:
     text = String to log to javascript console
   */
 
-  if (show_logs) {
+  if (typeof show_logs == "undefined" || show_logs) {
     console.log(text);
   }
 };

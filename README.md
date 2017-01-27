@@ -6,6 +6,7 @@ Library of javascript helper functions useful across a variety of different proj
  - **log**(text)
    - Logs message to the console
    - Looks for a global show_logs (boolean) constant before printing, allowing to quickly turn on / off all console logging
+     - If show_logs not declared will log text
    - Saves the time writing "console."
  - **len**(item)
  - **int**(item)
