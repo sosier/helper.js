@@ -70,6 +70,30 @@ var generate_link = function(url, text) {
   return "<a href=\"" + url + "\">" + text + "</a>";
 };
 
+var generate_ul = function(list) {
+  var html = "<ul>";
+
+  for (var i=0; i<len(list); i++) {
+    html += "<li><span>" + list[i] + "</span></li>";
+  }
+
+  html += "</ul>";
+
+  return html;
+};
+
+var generate_ol = function(list) {
+  var html = "<ol>";
+
+  for (var i=0; i<len(list); i++) {
+    html += "<li><span>" + list[i] + "</span></li>";
+  }
+
+  html += "</ol>";
+
+  return html;
+};
+
 // URL Functions
 var remove_url_protocol = function(url) {
   var url_without_protocol = remove_left(url, url.indexOf("//") + 2);
@@ -117,8 +141,17 @@ var extract_top_level_domain = function(string, from="url") {
   }
 };
 
+var encode_URI = function(string) {
+  if (string.contains("'")) {
+    var result = encodeURIComponent(string);
+    return replace_all(result, "'", "%27");
+  }
+
+  return encodeURIComponent(string);
+}
+
 // JQuery Functions
-var get_jquery_selector = function(jquery_object) {
+var get_unique_jquery_selector = function(jquery_object) {
   var path = [];
 
   // The element itself
@@ -161,16 +194,30 @@ jQuery.fn.extend({
     } catch(error) {
       return undefined;
     }
+  },
+  contains: function(jquery_selector) {
+    return len(this.find(jquery_selector)) > 0;
+  },
+  first: function(jquery_selector) {
+    return $(this.find(jquery_selector)[0]);
+  },
+  deep_unbind: function() {
+    __deep_unbind(this);
   }
 });
 
-var deep_unbind = function(jquery_object) {
+var __deep_unbind = function(jquery_object) {
   jquery_object.off();
   $.each(jquery_object.children(), function(index, value) {
-    deep_unbind($(value));
+    __deep_unbind($(value));
   });
 };
 
+var at_max_scroll = function() {
+  return ($(window).scrollTop() + $(window).height() == $(document).height());
+};
+
+// Requires JQuery, but acts on other objects
 var deep_copy = function(original_object) {
   return jQuery.extend(true, {}, original_object);
 };
@@ -182,6 +229,10 @@ var len = function(item) {
 
 var is_number = function(n) {
   return !isNaN(parseFloat(n)) && isFinite(n);
+};
+
+var round = function(number) {
+  return Math.round(number);
 };
 
 var int = function(item) {
@@ -208,6 +259,26 @@ var str = function(item, insert) {
 };
 
 String.prototype.contains = function(sub_string) { return this.indexOf(sub_string) != -1; };
+
+String.prototype.contains_any = function(list_of_strings) {
+  for (var i=0; i < len(list_of_strings); i++) {
+    if (this.contains(list_of_strings[i])) {
+      return true;
+    }
+  }
+  // Else
+  return false;
+};
+
+String.prototype.contains_all = function(list_of_strings) {
+  for (var i=0; i < len(list_of_strings); i++) {
+    if (!this.contains(list_of_strings[i])) {
+      return false;
+    }
+  }
+  // Else
+  return true;
+};
 
 var starts_with = function(string, substring) {
   return string.indexOf(substring) == 0;
@@ -244,18 +315,22 @@ var upper = function(string) {
 };
 
 var replace_all = function(string, replace, replacement) {
+  var new_string = string;
+
   if (typeof(replace) == "object") {
-    for (var i in replace) {
-      if (string.includes(replace[i])) {
-        string = string.split(replace[i]).join(replacement);
+    for (var i=0; i<len(replace); i++) {
+      if (new_string.includes(replace[i])) {
+        new_string = new_string.split(replace[i]).join(replacement);
       }
     }
-  } else {
-    if (string.includes(replace)) {
-      string = string.split(replace).join(replacement);
+  }
+  else {
+    if (new_string.includes(replace)) {
+      new_string = new_string.split(replace).join(replacement);
     }
   }
-  return string;
+
+  return new_string;
 };
 
 var left = function(string, numberOfCharacters) {
@@ -333,7 +408,17 @@ var clean_punctuation = function(string, punctuation="!^&*(){}[]:;,.?") {
   return string;
 };
 
-var words = function(string, clean_string=true) {
+var rgb_to_rgba = function(rgb_string, a=1) {
+  var rgba = "rgba(";
+
+  // Remove "rgb(" from start and ")" from end
+  rgba += remove_left(remove_right(lil_ai_color, 1), 4);
+
+  rgba += ", " + str(a) + ")";
+  return rgba;
+};
+
+var words = function(string, clean_string=false) {
   if (clean_string) {
       string = clean_punctuation(string);
       string = string.trim();
@@ -343,8 +428,8 @@ var words = function(string, clean_string=true) {
   return string.split(" ");
 };
 
-var word = function(string, i, clean_string=true) {
-  //WORD = Returns nth word from string
+var word = function(string, i, clean_string=false) {
+  //WORD = Returns i-th word from string
    return words(string, clean_string)[i];
 };
 
@@ -365,6 +450,32 @@ var max = function() {
 var random_between = function(low, high) {
   //RANDOMBETWEEN = Returns random integer between (and including specified bounds)
     return floor( random(low, high+1) );
+};
+
+var sample = function(list, n, with_repeats=false) {
+  if (n <= len(list)) {
+    var sampled_ids = [];
+
+    for (var i=0; i<n; i++) {
+      var sampled_id = random_between(0, len(list) - 1);
+
+      if (!with_repeats) {
+        while (sampled_id in set(sampled_ids)) {
+          sampled_id = random_between(0, len(list) - 1);
+        }
+      }
+
+      sampled_ids.push(sampled_id);
+    }
+
+    var result = [];
+
+    for (var i=0; i<len(sampled_ids); i++) {
+      result.push(list[sampled_ids[i]]);
+    }
+
+    return result;
+  }
 };
 
 Array.prototype.copy = function() {
@@ -422,6 +533,14 @@ var last = function(array, n=1, reverse=false) {
 
     return result;
   }
+};
+
+var remove_first = function(array, n=1) {
+  return last(array, len(array) - n);
+};
+
+var remove_last = function(array, n=1) {
+  return first(array, len(array) - n);
 };
 
 var range = function(_from, to="", by=1) {
@@ -530,7 +649,7 @@ var any_in = function(items, in_set) {
 
 var keys = function(object) {
   return Object.keys(object);
-}
+};
 
 var values = function(object) {
   return Object.values(object);
@@ -606,6 +725,14 @@ var sqrt = function(x) {
 
 var log2 = function(x) {
   return Math.log(x) / Math.log(2);
+};
+
+var floor = function(n) {
+  return Math.floor(n);
+};
+
+var random = function(low, high) {
+  return Math.random() * (high - low) + low;
 };
 
 var n_choose_k = function(n, k) {
